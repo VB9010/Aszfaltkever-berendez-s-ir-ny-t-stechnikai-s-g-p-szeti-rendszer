@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aszfaltkeverő - Fejlett Irányítástechnikai és Gépészeti Rendszer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            color: #333;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(44, 62, 80, 0.95));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(52, 73, 94, 0.9));
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-button {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-weight: bold;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.3), transparent);
+            transition: all 0.4s ease;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .tab-button:hover {
+            background: linear-gradient(135deg, #34495e, #3b5998);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .tab-button:hover::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+            transform: scale(1.05);
+        }
+
+        .content {
+            flex: 1;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .schema-container {
+            width: 100%;
+            min-height: 800px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 3px solid #dee2e6;
+            border-radius: 15px;
+            position: relative;
+            overflow: auto;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .electrical-schema {
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,0,0,.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,.08) 1px, transparent 1px);
+            background-size: 25px 25px;
+            position: relative;
+        }
+
+        .component {
+            position: absolute;
+            border: 3px solid #333;
+            background: linear-gradient(135deg, white, #f8f9fa);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .component:hover {
+            transform: scale(1.1) rotate(1deg);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+            z-index: 10;
+        }
+
+        .component.selected {
+            border-color: #e74c3c;
+            box-shadow: 0 0 30px rgba(231, 76, 60, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .plc { 
+            background: linear-gradient(135deg, #27ae60, #2ecc71); 
+            color: white; 
+            width: 140px; 
+            height: 90px; 
+        }
+        .motor { 
+            background: linear-gradient(135deg, #3498db, #5dade2); 
+            color: white; 
+            width: 110px; 
+            height: 70px; 
+        }
+        .sensor { 
+            background: linear-gradient(135deg, #e74c3c, #ec7063); 
+            color: white; 
+            width: 90px; 
+            height: 60px; 
+        }
+        .valve { 
+            background: linear-gradient(135deg, #f39c12, #f7dc6f); 
+            color: white; 
+            width: 80px; 
+            height: 60px; 
+        }
+        .pump { 
+            background: linear-gradient(135deg, #9b59b6, #bb8fce); 
+            color: white; 
+            width: 90px; 
+            height: 70px; 
+        }
+        .transformer { 
+            background: linear-gradient(135deg, #34495e, #5d6d7e); 
+            color: white; 
+            width: 120px; 
+            height: 90px; 
+        }
+        .switch { 
+            background: linear-gradient(135deg, #95a5a6, #aab7b8); 
+            color: white; 
+            width: 70px; 
+            height: 50px; 
+        }
+
+        .connection {
+            position: absolute;
+            border-left: 4px solid;
+            border-top: 4px solid;
+            pointer-events: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .connection:hover {
+            opacity: 1;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        .power-line { border-color: #e74c3c; }
+        .control-line { border-color: #3498db; }
+        .signal-line { border-color: #f39c12; }
+        .network-line { border-color: #27ae60; }
+
+        .legend {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255,255,255,0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .legend h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .legend-item:hover {
+            transform: translateX(5px);
+        }
+
+        .legend-color {
+            width: 25px;
+            height: 4px;
+            margin-right: 12px;
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .schema-title {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.95), rgba(52, 73, 94, 0.95));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            background: rgba(255,255,255,0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            max-width: 350px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .info-panel h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .process-flow {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 25px;
+        }
+
+        .process-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f39c12, #e74c3c, #f39c12);
+            background-size: 200% 100%;
+            animation: gradient-move 3s ease infinite;
+        }
+
+        @keyframes gradient-move {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .process-step:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+
+        .process-step h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .pipe-diagram {
+            display: none;
+            position: relative;
+            height: 700px;
+            background: radial-gradient(circle at center, #ecf0f1, #bdc3c7);
+        }
+
+        .pipe {
+            position: absolute;
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .pipe-horizontal {
+            height: 25px;
+        }
+
+        .pipe-vertical {
+            width: 25px;
+        }
+
+        .pipe-label {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.95), rgba(44, 62, 80, 0.95));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .equipment-symbol {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 4px solid #2c3e50;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .equipment-symbol:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .tank { border-radius: 12px; width: 90px; height: 110px; }
+        .mixer-symbol { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+        .dryer-symbol { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+        .storage-symbol { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .technical-specs {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 25px;
+        }
+
+        .spec-card {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spec-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+        }
+
+        .spec-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+
+        .spec-card h3 {
+            margin-bottom: 20px;
+            color: #ffeaa7;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .spec-item:hover {
+            background: rgba(255,255,255,0.1);
+            margin: 0 -10px 12px -10px;
+            padding: 5px 10px 8px 10px;
+            border-radius: 5px;
+        }
+
+        .real-time-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .real-time-panel.collapsed {
+            transform: translateX(calc(100% - 60px));
+        }
+
+        .panel-toggle {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px 0 0 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .panel-toggle:hover {
+            background: #c0392b;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 2s infinite;
+        }
+
+        .status-running { background: #27ae60; }
+        .status-warning { background: #f39c12; }
+        .status-error { background: #e74c3c; }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .control-panel {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            background: rgba(255,255,255,0.98);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .control-button.stop {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .control-button.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tab-button {
+                width: 90%;
+                margin: 5px 0;
+            }
+            
+            .technical-specs {
+                grid-template-columns: 1fr;
+            }
+            
+            .process-flow {
+                grid-template-columns: 1fr;
+            }
+            
+            .real-time-panel {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+            
+            .real-time-panel.collapsed {
+                transform: none;
+            }
+            
+            .panel-toggle {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: all 0.4s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        /* SCADA Interface Styles */
+        .scada-interface {
+            height: 800px;
+            background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+            border-radius: 15px;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: 50px 1fr 50px;
+            grid-template-columns: 200px 1fr 250px;
+            gap: 2px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        .scada-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #0f3460, #16537e);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid #00d4ff;
+            color: white;
+        }
+
+        .scada-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-right: 20px;
+        }
+
+        .scada-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+            font-size: 12px;
+        }
+
+        .scada-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: scada-pulse 2s infinite;
+        }
+
+        .light-green { background: #00ff41; }
+        .light-yellow { background: #ffaa00; }
+        .light-red { background: #ff0040; }
+
+        @keyframes scada-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .scada-sidebar {
+            background: linear-gradient(135deg, #2d2d44, #3a3a5c);
+            padding: 15px;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .scada-nav-section {
+            margin-bottom: 20px;
+        }
+
+        .scada-nav-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #00d4ff;
+        }
+
+        .scada-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 3px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            border-left: 3px solid transparent;
+        }
+
+        .scada-nav-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-left-color: #00d4ff;
+        }
+
+        .scada-nav-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-left-color: #00d4ff;
+        }
+
+        .scada-main {
+            background: #1e1e2e;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scada-process-view {
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.05), transparent),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 65, 0.05), transparent),
+                #1a1a2e;
+            border-radius: 10px;
+            position: relative;
+            border: 1px solid #333;
+        }
+
+        .scada-equipment {
+            position: absolute;
+            border: 2px solid #00d4ff;
+            background: linear-gradient(135deg, #2d2d44, #3a3a5c);
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            min-width: 60px;
+        }
+
+        .scada-equipment:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .scada-equipment.running { 
+            border-color: #00ff41; 
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+        .scada-equipment.warning { 
+            border-color: #ffaa00; 
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
+        }
+        .scada-equipment.error { 
+            border-color: #ff0040; 
+            box-shadow: 0 0 15px rgba(255, 0, 64, 0.2);
+        }
+
+        .scada-silo {
+            width: 50px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+        }
+
+        .scada-dryer {
+            width: 100px;
+            height: 50px;
+            border-radius: 25px;
+            position: relative;
+        }
+
+        .scada-mixer {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .scada-motor {
+            width: 50px;
+            height: 35px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .scada-sensor {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            border-radius: 50%;
+        }
+
+        .scada-pipeline {
+            position: absolute;
+            background: linear-gradient(90deg, #34495e, #2c3e50);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .scada-pipeline-h { height: 8px; border-radius: 4px; }
+        .scada-pipeline-v { width: 8px; border-radius: 4px; }
+
+        .scada-pipeline.active {
+            background: linear-gradient(90deg, #00d4ff, #0099cc, #00d4ff);
+            background-size: 20px 100%;
+            animation: scada-flow 1s linear infinite;
+        }
+
+        @keyframes scada-flow {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 0; }
+        }
+
+        .scada-value {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00d4ff;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            border: 1px solid #00d4ff;
+        }
+
+        .scada-right-panel {
+            background: linear-gradient(135deg, #2d2d44, #3a3a5c);
+            padding: 15px;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .scada-panel-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+        }
+
+        .scada-panel-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scada-param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+        }
+
+        .scada-param-label {
+            color: #ccc;
+        }
+
+        .scada-param-value {
+            font-weight: bold;
+            color: #00ff41;
+        }
+
+        .scada-param-value.warning { color: #ffaa00; }
+        .scada-param-value.error { color: #ff0040; }
+
+        .scada-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .scada-btn {
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+        }
+
+        .scada-btn-start {
+            background: linear-gradient(135deg, #00ff41, #00d435);
+            color: white;
+        }
+
+        .scada-btn-stop {
+            background: linear-gradient(135deg, #ff0040, #d40030);
+            color: white;
+        }
+
+        .scada-btn-emergency {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .scada-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .scada-footer {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #0f3460, #16537e);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            border-top: 2px solid #00d4ff;
+            font-size: 11px;
+            color: white;
+        }
+
+        .scada-rotating {
+            animation: scada-rotate 3s linear infinite;
+        }
+
+        .scada-rotating.stopped {
+            animation-play-state: paused;
+        }
+
+        @keyframes scada-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .scada-log {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .scada-log-entry {
+            padding: 4px;
+            margin: 2px 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid #00d4ff;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .scada-log-warning { border-left-color: #ffaa00; }
+        .scada-log-error { border-left-color: #ff0040; }
+        .scada-log-info { border-left-color: #00ff41; }
+
+        .scada-alarm {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #ff0040, #ff6b35);
+            color: white;
+            padding: 8px 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 100;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .scada-alarm.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Aszfaltkeverő Berendezés</h1>
+            <p>Fejlett Irányítástechnikai és Gépészeti Rendszer</p>
+        </div>
+
+        <div class="real-time-panel" id="realTimePanel">
+            <button class="panel-toggle" onclick="togglePanel()">📊</button>
+            <h3 style="margin-bottom: 15px;">📈 Valós idejű adatok</h3>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-running"></span>
+                <strong>Szárító hőm.:</strong> <span id="dryerTemp">182°C</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-running"></span>
+                <strong>Keverő hőm.:</strong> <span id="mixerTemp">165°C</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-warning"></span>
+                <strong>Gáznyomás:</strong> <span id="gasPress">7.2 bar</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-running"></span>
+                <strong>Produkció:</strong> <span id="production">98.5 t/h</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-running"></span>
+                <strong>Bitumen szint:</strong> <span id="bitumenLevel">78%</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <span class="status-indicator status-running"></span>
+                <strong>Üzemóra:</strong> <span id="operatingHours">1,247 h</span>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('electrical')">⚡ Elektromos séma</button>
+            <button class="tab-button" onclick="showTab('piping')">🔧 Csővezeték séma</button>
+            <button class="tab-button" onclick="showTab('process')">🔄 Technológiai folyamat</button>
+            <button class="tab-button" onclick="showTab('specs')">📊 Műszaki paraméterek</button>
+            <button class="tab-button" onclick="showTab('monitor')">📱 Monitoring</button>
+            <button class="tab-button" onclick="showTab('scada')">🖥️ SCADA</button>
+        </div>
+
+        <div class="content">
+            <!-- Elektromos séma -->
+            <div id="electrical" class="tab-content active">
+                <div class="schema-container">
+                    <div class="electrical-schema">
+                        <div class="schema-title">⚡ Elektromos és Irányítástechnikai Séma</div>
+                        
+                        <!-- Fő elosztó -->
+                        <div class="component transformer" style="top: 60px; left: 60px;" onclick="selectComponent(this, 'Fő transzformátor', '690V/400V, 2500 kVA, ONAN hűtés')">
+                            Fő transzformátor<br>2500 kVA<br>🔋 690V
+                        </div>
+
+                        <!-- PLC rendszer -->
+                        <div class="component plc" style="top: 220px; left: 350px;" onclick="selectComponent(this, 'PLC', 'Siemens S7-1500, 128 I/O, Profinet, HMI: SCADA')">
+                            PLC S7-1500<br>Central CPU<br>🖥️ SCADA
+                        </div>
+
+                        <!-- Motorok -->
+                        <div class="component motor" style="top: 380px; left: 170px;" onclick="selectComponent(this, 'Szárító motor', '132 kW, 1480 rpm, VFD vezérelt')">
+                            Szárító motor<br>132 kW<br>⚙️ VFD
+                        </div>
+
+                        <div class="component motor" style="top: 380px; left: 320px;" onclick="selectComponent(this, 'Keverő motor', '250 kW, 45 rpm, VFD vezérelt')">
+                            Keverő motor<br>250 kW<br>🔄 45 rpm
+                        </div>
+
+                        <div class="component motor" style="top: 380px; left: 470px;" onclick="selectComponent(this, 'Szállító motor', '45 kW, 960 rpm, állandó fordulatszám')">
+                            Szállító motor<br>45 kW<br>📦 Konst.
+                        </div>
+
+                        <!-- VFD-k -->
+                        <div class="component switch" style="top: 300px; left: 170px;" onclick="selectComponent(this, 'VFD1', 'ABB ACS580, 132 kW, IP54')">
+                            VFD1<br>132kW<br>🎛️ ABB
+                        </div>
+
+                        <div class="component switch" style="top: 300px; left: 320px;" onclick="selectComponent(this, 'VFD2', 'ABB ACS580, 250 kW, IP54')">
+                            VFD2<br>250kW<br>🎛️ ABB
+                        </div>
+
+                        <!-- Szenzorok -->
+                        <div class="component sensor" style="top: 130px; left: 650px;" onclick="selectComponent(this, 'Hőmérséklet 1', 'PT100, 0-1200°C, égő zóna')">
+                            TT-01<br>Égő T°<br>🌡️ 1200°C
+                        </div>
+
+                        <div class="component sensor" style="top: 200px; left: 650px;" onclick="selectComponent(this, 'Hőmérséklet 2', 'PT100, 0-800°C, szárító kimenet')">
+                            TT-02<br>Szárító T°<br>🌡️ 800°C
+                        </div>
+
+                        <div class="component sensor" style="top: 270px; left: 650px;" onclick="selectComponent(this, 'Hőmérséklet 3', 'PT100, 0-300°C, keverő')">
+                            TT-03<br>Keverő T°<br>🌡️ 300°C
+                        </div>
+
+                        <div class="component sensor" style="top: 340px; left: 650px;" onclick="selectComponent(this, 'Nyomás 1', '0-10 bar, gáz nyomás')">
+                            PT-01<br>Gáz P<br>⏲️ 10 bar
+                        </div>
+
+                        <div class="component sensor" style="top: 410px; left: 650px;" onclick="selectComponent(this, 'Szint szenzor', 'Radar, 0-15m, tárolók')">
+                            LT-01<br>Szint<br>📡 Radar
+                        </div>
+
+                        <!-- Szelepek -->
+                        <div class="component valve" style="top: 480px; left: 220px;" onclick="selectComponent(this, 'Gázszelep', 'DN50, pneumatikus, failsafe close')">
+                            XV-01<br>Gáz<br>🔧 DN50
+                        </div>
+
+                        <div class="component valve" style="top: 480px; left: 320px;" onclick="selectComponent(this, 'Bitumen szelep', 'DN25, elektromos, fűtött')">
+                            XV-02<br>Bitumen<br>🔥 Fűtött
+                        </div>
+
+                        <!-- Pumpák -->
+                        <div class="component pump" style="top: 480px; left: 470px;" onclick="selectComponent(this, 'Bitumen pumpa', '5 kW, fűtött, viszkózus folyadék')">
+                            P-01<br>Bitumen<br>💧 5kW
+                        </div>
+
+                        <!-- Javított kapcsolatok -->
+                        <div class="connection power-line" style="top: 140px; left: 180px; width: 170px; height: 80px;"></div>
+                        <div class="connection control-line" style="top: 340px; left: 240px; width: 110px; height: 40px;"></div>
+                        <div class="connection signal-line" style="top: 290px; left: 470px; width: 180px; height: 80px;"></div>
+                        <div class="connection network-line" style="top: 300px; left: 470px; width: 120px; height: 30px;"></div>
+
+                        <div class="legend">
+                            <h4>🎯 Jelmagyarázat</h4>
+                            <div class="legend-item">
+                                <div class="legend-color power-line"></div>
+                                <span>Főtáp (690V)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color control-line"></div>
+                                <span>Vezérlés (24V)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color signal-line"></div>
+                                <span>Analóg jel (4-20mA)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color network-line"></div>
+                                <span>Profinet/Ethernet</span>
+                            </div>
+                        </div>
+
+                        <div class="info-panel" id="info-panel">
+                            <h4>🔍 Komponens információ</h4>
+                            <p id="info-content">Kattintson egy komponensre a részletekért</p>
+                            <div id="extra-info" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+                        </div>
+
+                        <div class="control-panel">
+                            <h4 style="margin-bottom: 10px; color: #2c3e50;">🎮 Vezérlés</h4>
+                            <button class="control-button" onclick="startSystem()">▶️ Start</button>
+                            <button class="control-button stop" onclick="stopSystem()">⏹️ Stop</button>
+                            <button class="control-button warning" onclick="emergencyStop()">🚨 EMERGENCY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Csővezeték séma -->
+            <div id="piping" class="tab-content">
+                <div class="schema-container">
+                    <div class="pipe-diagram">
+                        <div class="schema-title">🔧 Csővezeték és Pneumatikus Séma</div>
+
+                        <!-- Bitumen rendszer -->
+                        <div class="equipment-symbol tank storage-symbol" style="top: 60px; left: 60px;">
+                            Bitumen<br>tank<br>80 m³
+                        </div>
+                        <div class="pipe pipe-horizontal" style="top: 95px; left: 150px; width: 220px;"></div>
+                        <div class="pipe-label" style="top: 70px; left: 230px;">DN50 Bitumen vezeték</div>
+                        
+                        <div class="equipment-symbol pump" style="top: 80px; left: 390px;">P-01<br>5kW</div>
+                        <div class="pipe pipe-horizontal" style="top: 95px; left: 460px; width: 170px;"></div>
+                        
+                        <div class="equipment-symbol mixer-symbol" style="top: 80px; left: 650px;">
+                            Keverő<br>3000L
+                        </div>
+
+                        <!-- Pneumatikus rendszer -->
+                        <div class="equipment-symbol" style="top: 230px; left: 60px; background: #3498db; color: white;">
+                            Kompresszor<br>8 bar<br>15 kW
+                        </div>
+                        <div class="pipe pipe-horizontal" style="top: 245px; left: 150px; width: 500px;"></div>
+                        <div class="pipe-label" style="top: 220px; left: 350px;">DN25 Pneumatikus rendszer</div>
+
+                        <!-- Szárító gáz -->
+                        <div class="equipment-symbol" style="top: 400px; left: 60px; background: #e74c3c; color: white;">
+                            Gáz<br>ellátás<br>25 MW
+                        </div>
+                        <div class="pipe pipe-horizontal" style="top: 415px; left: 150px; width: 320px;"></div>
+                        <div class="pipe pipe-vertical" style="top: 230px; left: 460px; height: 185px;"></div>
+                        <div class="equipment-symbol dryer-symbol" style="top: 200px; left: 440px;">
+                            Szárító<br>égő<br>25MW
+                        </div>
+                        <div class="pipe-label" style="top: 390px; left: 280px;">DN80 Gáz fővezeték</div>
+
+                        <!-- Adagolók -->
+                        <div class="equipment-symbol storage-symbol" style="top: 550px; left: 120px;">
+                            Zúzalék<br>0-4mm<br>150t
+                        </div>
+                        <div class="equipment-symbol storage-symbol" style="top: 550px; left: 230px;">
+                            Zúzalék<br>4-8mm<br>150t
+                        </div>
+                        <div class="equipment-symbol storage-symbol" style="top: 550px; left: 340px;">
+                            Zúzalék<br>8-16mm<br>150t
+                        </div>
+                        <div class="equipment-symbol storage-symbol" style="top: 550px; left: 450px;">
+                            Mészkő<br>liszt<br>150t
+                        </div>
+
+                        <!-- Szállító vonalak -->
+                        <div class="pipe pipe-vertical" style="top: 470px; left: 145px; height: 80px;"></div>
+                        <div class="pipe pipe-vertical" style="top: 470px; left: 255px; height: 80px;"></div>
+                        <div class="pipe pipe-vertical" style="top: 470px; left: 365px; height: 80px;"></div>
+                        <div class="pipe pipe-vertical" style="top: 470px; left: 475px; height: 80px;"></div>
+                        
+                        <div class="pipe pipe-horizontal" style="top: 470px; left: 145px; width: 330px;"></div>
+                        <div class="pipe pipe-vertical" style="top: 330px; left: 475px; height: 140px;"></div>
+                        <div class="pipe pipe-horizontal" style="top: 330px; left: 475px; width: 175px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technológiai folyamat -->
+            <div id="process" class="tab-content">
+                <div class="process-flow">
+                    <div class="process-step">
+                        <h3>1️⃣ Előkészítés</h3>
+                        <p>• Adalékanyagok előmelegítése 80°C<br>
+                        • Szitálás és granulometria<br>
+                        • Bitumen előmelegítése 160°C<br>
+                        • Rendszer előmelegítése és kalibráció</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>2️⃣ Szárítás</h3>
+                        <p>• Nedves adalékanyagok betáplálása<br>
+                        • Forgó dobban szárítás 180°C<br>
+                        • Gázégő 25 MW teljesítmény<br>
+                        • Portleválasztás szűrőrendszerrel</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>3️⃣ Adagolás</h3>
+                        <p>• Precíz mérlegek szerinti adagolás<br>
+                        • Mészkőliszt pneumatikus hozzáadása<br>
+                        • Bitumen befecskendezés 160°C-on<br>
+                        • Szállítószalagos anyagmozgatás</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>4️⃣ Keverés</h3>
+                        <p>• Dupla tengely keverő rendszer<br>
+                        • 45 rpm optimális keverési sebesség<br>
+                        • 90 sec precíz keverési idő<br>
+                        • Homogén aszfaltkeverék előállítása</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>5️⃣ Hőmérséklet kontroll</h3>
+                        <p>• Folyamatos többpontos hőmérséklet mérés<br>
+                        • Fejlett PID szabályozó algoritmus<br>
+                        • Optimális 165°C keverési hőmérséklet<br>
+                        • Többszintű túlmelegedés védelem</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>6️⃣ Minőségbiztosítás</h3>
+                        <p>• Automatikus mintavételezés<br>
+                        • Marshall próbák laboratóriumi vizsgálata<br>
+                        • Granulometria folyamatos ellenőrzése<br>
+                        • Bitumen tartalom gravimetriás mérése</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>7️⃣ Kirakodás</h3>
+                        <p>• Kész keverék automatikus kiadagolása<br>
+                        • Szállítójármű intelligens feltöltése<br>
+                        • Hőmérséklet fenntartása szállításhoz<br>
+                        • Digitális szállítási dokumentáció</p>
+                    </div>
+                    
+                    <div class="process-step">
+                        <h3>8️⃣ Monitoring & Analytics</h3>
+                        <p>• Fejlett SCADA rendszer<br>
+                        • Big Data adatgyűjtés és elemzés<br>
+                        • Prediktív karbantartás<br>
+                        • Valós idejű riportok és KPI-k</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Műszaki paraméterek -->
+            <div id="specs" class="tab-content">
+                <div class="technical-specs">
+                    <div class="spec-card">
+                        <h3>⚡ Elektromos rendszer</h3>
+                        <div class="spec-item"><span>Főfeszültség:</span><span>690V / 50Hz</span></div>
+                        <div class="spec-item"><span>Transzformátor:</span><span>2500 kVA</span></div>
+                        <div class="spec-item"><span>Összes teljesítmény:</span><span>2200 kW</span></div>
+                        <div class="spec-item"><span>PLC típus:</span><span>Siemens S7-1500</span></div>
+                        <div class="spec-item"><span>I/O pontok:</span><span>128 digitális + 64 analóg</span></div>
+                        <div class="spec-item"><span>Kommunikáció:</span><span>Profinet, Ethernet/IP</span></div>
+                        <div class="spec-item"><span>HMI:</span><span>21" érintőképernyő SCADA</span></div>
+                        <div class="spec-item"><span>Kábelek száma:</span><span>85 db + 15 tartalék</span></div>
+                    </div>
+
+                    <div class="spec-card">
+                        <h3>🔥 Szárító rendszer</h3>
+                        <div class="spec-item"><span>Dob átmérő:</span><span>3.6 m</span></div>
+                        <div class="spec-item"><span>Dob hossz:</span><span>12 m</span></div>
+                        <div class="spec-item"><span>Fordulatszám:</span><span>8 rpm (VFD)</span></div>
+                        <div class="spec-item"><span>Égő teljesítmény:</span><span>25 MW (dual fuel)</span></div>
+                        <div class="spec-item"><span>Üzemi hőmérséklet:</span><span>180°C ±5°C</span></div>
+                        <div class="spec-item"><span>Tüzelőanyag:</span><span>Földgáz / Gázolaj</span></div>
+                        <div class="spec-item"><span>Kapacitás:</span><span>800 t/h (száraz anyag)</span></div>
+                        <div class="spec-item"><span>Motor teljesítmény:</span><span>132 kW (IE3)</span></div>
+                    </div>
+
+                    <div class="spec-card">
+                        <h3>🥄 Keverő rendszer</h3>
+                        <div class="spec-item"><span>Típus:</span><span>Dupla tengely (twin shaft)</span></div>
+                        <div class="spec-item"><span>Űrtartalom:</span><span>3000 L hatékony</span></div>
+                        <div class="spec-item"><span>Fordulatszám:</span><span>45 rpm (szinkron)</span></div>
+                        <div class="spec-item"><span>Keverési idő:</span><span>90 sec (optimalizált)</span></div>
+                        <div class="spec-item"><span>Motor teljesítmény:</span><span>250 kW (IE4)</span></div>
+                        <div class="spec-item"><span>Keverőlapátok:</span><span>24 db Hardox 500</span></div>
+                        <div class="spec-item"><span>Kapacitás:</span><span>120 t/h kész keverék</span></div>
+                        <div class="spec-item"><span>Kopásálló bélés:</span><span>Hardox 450 + Ni-Hard</span></div>
+                    </div>
+
+                    <div class="spec-card">
+                        <h3>📦 Tárolórendszer</h3>
+                        <div class="spec-item"><span>Silók száma:</span><span>6 db + 2 tartalék</span></div>
+                        <div class="spec-item"><span>Siló kapacitás:</span><span>150 t/db (összesen 900t)</span></div>
+                        <div class="spec-item"><span>Bitumen tank:</span><span>80 m³ (fűtött, szigetelt)</span></div>
+                        <div class="spec-item"><span>Bitumen hőmérséklet:</span><span>160°C ±3°C</span></div>
+                        <div class="spec-item"><span>Szintmérés:</span><span>Radar szenzor (Rosemount)</span></div>
+                        <div class="spec-item"><span>Mérlegek pontossága:</span><span>±0.5% (kalibrált)</span></div>
+                        <div class="spec-item"><span>Adagolási rendszer:</span><span>Pneumatikus + vibrátor</span></div>
+                        <div class="spec-item"><span>Portszűrő:</span><span>Zsákszűrő 99.9% hatékonyság</span></div>
+                    </div>
+
+                    <div class="spec-card">
+                        <h3>🌡️ Mérés és szenzorok</h3>
+                        <div class="spec-item"><span>Hőmérséklet szenzorok:</span><span>12 db PT100 (4-vezetékes)</span></div>
+                        <div class="spec-item"><span>Nyomás szenzorok:</span><span>8 db (0-10 bar)</span></div>
+                        <div class="spec-item"><span>Szint szenzorok:</span><span>8 db radar + 4 db kapacitív</span></div>
+                        <div class="spec-item"><span>Sebesség szenzorok:</span><span>6 db encoder (absolut)</span></div>
+                        <div class="spec-item"><span>Súly mérőcellák:</span><span>16 db load cell</span></div>
+                        <div class="spec-item"><span>Jel átalakítók:</span><span>4-20 mA / HART protokoll</span></div>
+                        <div class="spec-item"><span>Mérési pontosság:</span><span>±0.1°C / ±0.1% (kalibrált)</span></div>
+                        <div class="spec-item"><span>Kalibrálási ciklus:</span><span>6 hónap (akkreditált labor)</span></div>
+                    </div>
+
+                    <div class="spec-card">
+                        <h3>🔧 Karbantartás és megbízhatóság</h3>
+                        <div class="spec-item"><span>Üzemóra számláló:</span><span>Igen (automatikus logging)</span></div>
+                        <div class="spec-item"><span>Kenőanyag csere:</span><span>500 óra (automatikus emlékeztető)</span></div>
+                        <div class="spec-item"><span>Szűrő csere:</span><span>200 óra (nyomásesés alapú)</span></div>
+                        <div class="spec-item"><span>Keverőlapát csere:</span><span>2000 óra (vibráció monitoring)</span></div>
+                        <div class="spec-item"><span>Főjavítás:</span><span>8000 óra (prediktív)</span></div>
+                        <div class="spec-item"><span>Tervezett élettartam:</span><span>25 év (környezettől függően)</span></div>
+                        <div class="spec-item"><span>Rendelkezésre állás:</span><span>97.5% (SLA szerint)</span></div>
+                        <div class="spec-item"><span>MTBF:</span><span>850 óra (javuló trend)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monitoring tab -->
+            <div id="monitor" class="tab-content">
+                <div style="padding: 20px;">
+                    <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">📱 Valós idejű monitoring és vezérlés</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3>🔥 Szárító hőmérséklet</h3>
+                            <div style="font-size: 2em; margin: 10px 0;" id="monitor-dryer-temp">185°C</div>
+                            <div style="font-size: 0.9em;">Cél: 180°C ±5°C</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #3498db, #5dade2); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3>🥄 Keverő hőmérséklet</h3>
+                            <div style="font-size: 2em; margin: 10px 0;" id="monitor-mixer-temp">165°C</div>
+                            <div style="font-size: 0.9em;">Cél: 165°C ±3°C</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #f39c12, #f7dc6f); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3>⏲️ Gáznyomás</h3>
+                            <div style="font-size: 2em; margin: 10px 0;" id="monitor-gas-pressure">7.2 bar</div>
+                            <div style="font-size: 0.9em;">Min: 6.5 bar, Max: 8.0 bar</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #9b59b6, #bb8fce); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+                            <h3>📈 Produkció</h3>
+                            <div style="font-size: 2em; margin: 10px 0;" id="monitor-production">98.5 t/h</div>
+                            <div style="font-size: 0.9em;">Cél: 100 t/h</div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">📊 Trend grafikák</h3>
+                        <canvas id="trendChart" width="800" height="300" style="width: 100%; max-width: 800px; height: 300px; border: 1px solid #ddd; border-radius: 8px;"></canvas>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <h3 style="margin-bottom: 15px; color: #2c3e50;">🚨 Riasztások</h3>
+                            <div id="alerts-container">
+                                <div style="padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 10px; border-radius: 4px;">
+                                    <strong>⚠️ Figyelmeztetés:</strong> Gáznyomás a minimum közelében (7.2 bar)
+                                </div>
+                                <div style="padding: 10px; background: #d4edda; border-left: 4px solid #28a745; margin-bottom: 10px; border-radius: 4px;">
+                                    <strong>✅ Rendben:</strong> Minden hőmérséklet paraméter optimális tartományban
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <h3 style="margin-bottom: 15px; color: #2c3e50;">🎮 Gyorsvezérlés</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <button onclick="adjustParameter('dryer', 5)" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">🔥 Szárító +5°C</button>
+                                <button onclick="adjustParameter('dryer', -5)" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">❄️ Szárító -5°C</button>
+                                <button onclick="adjustParameter('mixer', 5)" style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">🥄 Keverő +5°C</button>
+                                <button onclick="adjustParameter('mixer', -5)" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">🥄 Keverő -5°C</button>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">⚡ Termelési sebesség:</label>
+                                <input type="range" id="production-slider" min="50" max="120" value="98" style="width: 100%;" onchange="updateProduction(this.value)">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666;">
+                                    <span>50 t/h</span>
+                                    <span>120 t/h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCADA Interface -->
+            <div id="scada" class="tab-content">
+                <div class="scada-interface">
+                    <div class="scada-alarm" id="scadaAlarm">
+                        🚨 RIASZTÁS: Gáznyomás kritikus szint alatt! Azonnali beavatkozás szükséges!
+                    </div>
+
+                    <!-- SCADA Header -->
+                    <div class="scada-header">
+                        <div class="scada-logo">🖥️ SCADA Control</div>
+                        <div class="scada-status">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div class="scada-light light-green"></div>
+                                <span>PLC: OK</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div class="scada-light light-yellow"></div>
+                                <span>Riasztás: 2</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div class="scada-light light-green"></div>
+                                <span>Üzemben</span>
+                            </div>
+                            <span id="scadaTime">14:25:33</span>
+                        </div>
+                    </div>
+
+                    <!-- SCADA Sidebar -->
+                    <div class="scada-sidebar">
+                        <div class="scada-nav-section">
+                            <div class="scada-nav-title">📊 ÁTTEKINTÉS</div>
+                            <div class="scada-nav-item active">🏠 Főoldal</div>
+                            <div class="scada-nav-item">⚙️ Folyamat</div>
+                            <div class="scada-nav-item">📈 Trendek</div>
+                        </div>
+
+                        <div class="scada-nav-section">
+                            <div class="scada-nav-title">🎛️ VEZÉRLÉS</div>
+                            <div class="scada-nav-item">🔧 Kézi vezérlés</div>
+                            <div class="scada-nav-item">📋 Receptek</div>
+                            <div class="scada-nav-item">🔨 Karbantartás</div>
+                        </div>
+
+                        <div class="scada-nav-section">
+                            <div class="scada-nav-title">📱 MONITOR</div>
+                            <div class="scada-nav-item">🚨 Riasztások</div>
+                            <div class="scada-nav-item">📄 Jelentések</div>
+                            <div class="scada-nav-item">📝 Naplók</div>
+                        </div>
+                    </div>
+
+                    <!-- SCADA Main Content -->
+                    <div class="scada-main">
+                        <div class="scada-process-view">
+                            <!-- Storage Silos -->
+                            <div class="scada-equipment scada-silo running" style="top: 30px; left: 30px;" onclick="selectSilo('silo1')">
+                                <div>📦</div>
+                                <div>SILO-1</div>
+                                <div style="color: #00ff41;">78%</div>
+                            </div>
+                            <div class="scada-equipment scada-silo running" style="top: 30px; left: 90px;" onclick="selectSilo('silo2')">
+                                <div>📦</div>
+                                <div>SILO-2</div>
+                                <div style="color: #00ff41;">65%</div>
+                            </div>
+                            <div class="scada-equipment scada-silo running" style="top: 30px; left: 150px;" onclick="selectSilo('silo3')">
+                                <div>📦</div>
+                                <div>SILO-3</div>
+                                <div style="color: #00ff41;">82%</div>
+                            </div>
+                            <div class="scada-equipment scada-silo warning" style="top: 30px; left: 210px;" onclick="selectSilo('silo4')">
+                                <div>📦</div>
+                                <div>SILO-4</div>
+                                <div style="color: #ffaa00;">23%</div>
+                            </div>
+
+                            <!-- Dryer -->
+                            <div class="scada-equipment scada-dryer running" style="top: 150px; left: 60px;" onclick="selectEquipment('dryer')">
+                                <div class="scada-rotating" id="scadaDryerRotator" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 25px; background: linear-gradient(135deg, #e74c3c, #c0392b); z-index: 1;"></div>
+                                <div style="position: relative; z-index: 2; white-space: nowrap;">🔥 SZÁRÍTÓ DOB</div>
+                                <div style="position: relative; z-index: 2; color: #00ff41; white-space: nowrap;" id="scadaDryerDisplay">185°C</div>
+                            </div>
+
+                            <!-- Mixer -->
+                            <div class="scada-equipment scada-mixer running" style="top: 150px; left: 250px;" onclick="selectEquipment('mixer')">
+                                <div class="scada-rotating" id="scadaMixerRotator" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, #f39c12, #e67e22); z-index: 1;"></div>
+                                <div style="position: relative; z-index: 2; white-space: nowrap;">🥄 KEVERŐ</div>
+                                <div style="position: relative; z-index: 2; color: #00ff41; white-space: nowrap;" id="scadaMixerDisplay">165°C</div>
+                            </div>
+
+                            <!-- Motors - Moved down to avoid overlap -->
+                            <div class="scada-equipment scada-motor running" style="top: 280px; left: 80px;" onclick="selectMotor('motor1')">
+                                <div>⚙️ M1</div>
+                                <div>132kW</div>
+                            </div>
+                            <div class="scada-equipment scada-motor running" style="top: 280px; left: 270px;" onclick="selectMotor('motor2')">
+                                <div>⚙️ M2</div>
+                                <div>250kW</div>
+                            </div>
+
+                            <!-- Sensors -->
+                            <div class="scada-equipment scada-sensor running" style="top: 120px; left: 120px;" onclick="selectSensor('temp1')">
+                                <div>🌡️</div>
+                                <div>TT-01</div>
+                            </div>
+                            <div class="scada-equipment scada-sensor running" style="top: 120px; left: 310px;" onclick="selectSensor('temp2')">
+                                <div>🌡️</div>
+                                <div>TT-02</div>
+                            </div>
+                            <div class="scada-equipment scada-sensor warning" style="top: 180px; left: 30px;" onclick="selectSensor('press1')">
+                                <div>⏲️</div>
+                                <div>PT-01</div>
+                            </div>
+
+                            <!-- Pipelines -->
+                            <div class="scada-pipeline scada-pipeline-h active" style="top: 180px; left: 140px; width: 100px;"></div>
+                            <div class="scada-pipeline scada-pipeline-h active" style="top: 200px; left: 60px; width: 80px;"></div>
+                            <div class="scada-pipeline scada-pipeline-v active" style="top: 130px; left: 200px; height: 60px;"></div>
+
+                            <!-- Value Displays -->
+                            <div class="scada-value" style="top: 160px; left: 170px;">Bitumen: 160°C</div>
+                            <div class="scada-value" style="top: 240px; left: 170px;">Prod: 98.5 t/h</div>
+                            <div class="scada-value" style="top: 200px; left: 320px;">Mix: 165°C</div>
+                        </div>
+                    </div>
+
+                    <!-- SCADA Right Panel -->
+                    <div class="scada-right-panel">
+                        <div class="scada-panel-section">
+                            <div class="scada-panel-title">
+                                🎯 <span>Kiválasztott</span>
+                            </div>
+                            <div id="scadaSelectedEquipment">
+                                <div style="text-align: center; color: #666; padding: 15px; font-size: 11px;">
+                                    Kattintson egy berendezésre
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="scada-panel-section">
+                            <div class="scada-panel-title">
+                                📊 <span>Fő paraméterek</span>
+                            </div>
+                            <div class="scada-param-row">
+                                <span class="scada-param-label">Szárító:</span>
+                                <span class="scada-param-value" id="scadaDryerTemp">182°C</span>
+                            </div>
+                            <div class="scada-param-row">
+                                <span class="scada-param-label">Keverő:</span>
+                                <span class="scada-param-value" id="scadaMixerTemp">165°C</span>
+                            </div>
+                            <div class="scada-param-row">
+                                <span class="scada-param-label">Gáznyomás:</span>
+                                <span class="scada-param-value warning" id="scadaGasPress">7.2 bar</span>
+                            </div>
+                            <div class="scada-param-row">
+                                <span class="scada-param-label">Termelés:</span>
+                                <span class="scada-param-value" id="scadaProduction">98.5 t/h</span>
+                            </div>
+                        </div>
+
+                        <div class="scada-panel-section">
+                            <div class="scada-panel-title">
+                                🎮 <span>Vezérlés</span>
+                            </div>
+                            <div class="scada-controls">
+                                <button class="scada-btn scada-btn-start" onclick="scadaStartSystem()">▶️ START</button>
+                                <button class="scada-btn scada-btn-stop" onclick="scadaStopSystem()">⏹️ STOP</button>
+                                <button class="scada-btn scada-btn-emergency" onclick="scadaEmergencyStop()">🚨 VÉSZLEÁLLÍTÁS</button>
+                            </div>
+                        </div>
+
+                        <div class="scada-panel-section">
+                            <div class="scada-panel-title">
+                                📝 <span>Események</span>
+                            </div>
+                            <div class="scada-log" id="scadaEventLog">
+                                <div class="scada-log-entry scada-log-warning">14:25:33 - FIGY: Gáznyomás alacsony</div>
+                                <div class="scada-log-entry scada-log-info">14:24:15 - INFO: Keverő elindítva</div>
+                                <div class="scada-log-entry scada-log-info">14:23:45 - INFO: Szárító kész</div>
+                                <div class="scada-log-entry scada-log-info">14:22:30 - INFO: Inicializálva</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SCADA Footer -->
+                    <div class="scada-footer">
+                        <div style="display: flex; gap: 15px;">
+                            <span>🔗 PLC: OK</span>
+                            <span>📊 Adatok: Aktív</span>
+                            <span>👤 Operátor01</span>
+                        </div>
+                        <div>
+                            <span>SCADA v2.1.3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <div id="notification-content"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let selectedComponent = null;
+        let realTimeData = {
+            dryerTemp: 185,
+            mixerTemp: 165,
+            gasPresssure: 7.2,
+            production: 98.5,
+            bitumenLevel: 78,
+            operatingHours: 1247
+        };
+
+        let scadaData = {
+            selectedEquipment: null,
+            isScadaActive: false,
+            systemRunning: true
+        };
+
+        let trendData = [];
+        let chartCanvas, chartCtx;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            startRealTimeUpdates();
+            initTrendChart();
+            animateComponents();
+        });
+
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.id === 'process') {
+                    tab.querySelector('.process-flow').style.display = 'none';
+                } else if (tab.id === 'piping') {
+                    tab.querySelector('.pipe-diagram').style.display = 'none';
+                } else if (tab.id === 'specs') {
+                    tab.querySelector('.technical-specs').style.display = 'none';
+                }
+            });
+
+            // Deactivate all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            selectedTab.classList.add('active');
+            
+            if (tabName === 'process') {
+                selectedTab.querySelector('.process-flow').style.display = 'grid';
+                animateProcessSteps();
+            } else if (tabName === 'piping') {
+                selectedTab.querySelector('.pipe-diagram').style.display = 'block';
+            } else if (tabName === 'specs') {
+                selectedTab.querySelector('.technical-specs').style.display = 'grid';
+            } else if (tabName === 'monitor') {
+                updateTrendChart();
+            } else if (tabName === 'scada') {
+                initScada();
+                scadaData.isScadaActive = true;
+            }
+
+            // Activate button
+            event.target.classList.add('active');
+        }
+
+        // SCADA Functions
+        function initScada() {
+            console.log('SCADA inicializálás...');
+            updateScadaTime();
+            setInterval(updateScadaTime, 1000);
+            setInterval(updateScadaData, 2000);
+            scadaLogEvent('INFO', 'SCADA rendszer inicializálva');
+        }
+
+        function updateScadaTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('hu-HU');
+            const timeElement = document.getElementById('scadaTime');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        function updateScadaData() {
+            if (!scadaData.isScadaActive) return;
+            
+            // Update SCADA UI
+            const elements = {
+                'scadaDryerTemp': realTimeData.dryerTemp.toFixed(1) + '°C',
+                'scadaMixerTemp': realTimeData.mixerTemp.toFixed(1) + '°C',
+                'scadaGasPress': realTimeData.gasPresssure.toFixed(1) + ' bar',
+                'scadaProduction': realTimeData.production.toFixed(1) + ' t/h'
+            };
+            
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            });
+            
+            // Update dryer and mixer displays
+            const dryerDisplay = document.getElementById('scadaDryerDisplay');
+            const mixerDisplay = document.getElementById('scadaMixerDisplay');
+            if (dryerDisplay) dryerDisplay.textContent = realTimeData.dryerTemp.toFixed(1) + '°C';
+            if (mixerDisplay) mixerDisplay.textContent = realTimeData.mixerTemp.toFixed(1) + '°C';
+        }
+
+        // SCADA Equipment Selection Functions
+        function selectSilo(siloId) {
+            const siloData = {
+                'silo1': { name: 'SILO-1 (Zúzalék 0-4mm)', level: '78%', material: 'Zúzalék 0-4mm' },
+                'silo2': { name: 'SILO-2 (Zúzalék 4-8mm)', level: '65%', material: 'Zúzalék 4-8mm' },
+                'silo3': { name: 'SILO-3 (Zúzalék 8-16mm)', level: '82%', material: 'Zúzalék 8-16mm' },
+                'silo4': { name: 'SILO-4 (Mészkőliszt)', level: '23%', material: 'Mészkőliszt' }
+            };
+            
+            const silo = siloData[siloId];
+            updateSelectedEquipment(silo.name, 'Tárolósiló', `Szint: ${silo.level}, Anyag: ${silo.material}`);
+        }
+
+        function selectEquipment(equipmentId) {
+            const equipmentData = {
+                'dryer': { name: 'Szárító dob', type: 'Szárító berendezés', spec: 'Hőmérséklet: 185°C, Fordulatszám: 8 rpm' },
+                'mixer': { name: 'Dupla tengely keverő', type: 'Keverő berendezés', spec: 'Hőmérséklet: 165°C, Fordulatszám: 45 rpm' }
+            };
+            
+            const equipment = equipmentData[equipmentId];
+            updateSelectedEquipment(equipment.name, equipment.type, equipment.spec);
+        }
+
+        function selectMotor(motorId) {
+            const motorData = {
+                'motor1': { name: 'Szárító motor M1', spec: 'Teljesítmény: 132 kW, Áram: 98 A' },
+                'motor2': { name: 'Keverő motor M2', spec: 'Teljesítmény: 250 kW, Áram: 187 A' }
+            };
+            
+            const motor = motorData[motorId];
+            updateSelectedEquipment(motor.name, 'Elektromos motor', motor.spec);
+        }
+
+        function selectSensor(sensorId) {
+            const sensorData = {
+                'temp1': { name: 'Hőmérséklet szenzor TT-01', spec: 'Érték: 185°C, Tartomány: 0-1200°C' },
+                'temp2': { name: 'Hőmérséklet szenzor TT-02', spec: 'Érték: 165°C, Tartomány: 0-800°C' },
+                'press1': { name: 'Nyomás szenzor PT-01', spec: 'Érték: 7.2 bar, Tartomány: 0-10 bar' }
+            };
+            
+            const sensor = sensorData[sensorId];
+            updateSelectedEquipment(sensor.name, 'Szenzor', sensor.spec);
+        }
+
+        function updateSelectedEquipment(name, type, spec) {
+            const container = document.getElementById('scadaSelectedEquipment');
+            if (container) {
+                container.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <h4 style="color: #00d4ff; margin-bottom: 5px; font-size: 12px;">${name}</h4>
+                        <div style="color: #ccc; font-size: 10px; margin-bottom: 8px;">${type}</div>
+                    </div>
+                    <div class="scada-param-row">
+                        <span class="scada-param-label">Specifikáció:</span>
+                        <span class="scada-param-value" style="font-size: 10px;">${spec}</span>
+                    </div>
+                `;
+            }
+            scadaLogEvent('INFO', `Berendezés kiválasztva: ${name}`);
+        }
+
+        function scadaLogEvent(type, message) {
+            const logContainer = document.getElementById('scadaEventLog');
+            if (!logContainer) return;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('hu-HU');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `scada-log-entry scada-log-${type.toLowerCase()}`;
+            logEntry.textContent = `${timeString} - ${type}: ${message}`;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only last 8 entries
+            while (logContainer.children.length > 8) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // SCADA Control Functions
+        function scadaStartSystem() {
+            scadaData.systemRunning = true;
+            scadaLogEvent('INFO', 'Rendszer elindítva SCADA-ból');
+            showNotification('✅ SCADA: Rendszer elindítva', 'success');
+        }
+
+        function scadaStopSystem() {
+            scadaData.systemRunning = false;
+            scadaLogEvent('WARNING', 'Rendszer leállítva SCADA-ból');
+            showNotification('⏹️ SCADA: Rendszer leállítva', 'warning');
+        }
+
+        function scadaEmergencyStop() {
+            scadaData.systemRunning = false;
+            scadaLogEvent('ERROR', 'VÉSZLEÁLLÍTÁS aktiválva SCADA-ból');
+            showNotification('🚨 SCADA: VÉSZLEÁLLÍTÁS', 'error');
+        }
+
+        // Component selection
+        function selectComponent(element, title, description) {
+            if (selectedComponent) {
+                selectedComponent.classList.remove('selected');
+            }
+            
+            selectedComponent = element;
+            element.classList.add('selected');
+            
+            showInfo(title, description);
+            showNotification(`Kiválasztva: ${title}`, 'success');
+        }
+
+        function showInfo(title, description) {
+            const infoPanel = document.getElementById('info-panel');
+            const infoContent = document.getElementById('info-content');
+            const extraInfo = document.getElementById('extra-info');
+            
+            infoContent.innerHTML = `<strong>${title}</strong><br><br>${description}`;
+            
+            const extraData = getExtraComponentInfo(title);
+            extraInfo.innerHTML = extraData;
+            
+            infoPanel.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                infoPanel.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function getExtraComponentInfo(componentName) {
+            const extraInfoMap = {
+                'Fő transzformátor': 'Utolsó karbantartás: 2024.01.15<br>Következő: 2025.01.15<br>Állapot: Kiváló',
+                'PLC': 'CPU terhelés: 45%<br>Memória: 67%<br>Kommunikáció: OK',
+                'Szárító motor': 'Áramfelvétel: 98A<br>Vibráció: 2.1 mm/s<br>Csapágy hőm.: 45°C',
+                'Keverő motor': 'Áramfelvétel: 187A<br>Forgatónyomaték: 85%<br>Kenőanyag: OK'
+            };
+            return extraInfoMap[componentName] || 'További adatok betöltése...';
+        }
+
+        // Real-time data updates
+        function startRealTimeUpdates() {
+            setInterval(updateRealTimeData, 2000);
+        }
+
+        function updateRealTimeData() {
+            // Simulate real data
+            realTimeData.dryerTemp += (Math.random() - 0.5) * 3;
+            realTimeData.mixerTemp += (Math.random() - 0.5) * 2;
+            realTimeData.gasPresssure += (Math.random() - 0.5) * 0.3;
+            realTimeData.production += (Math.random() - 0.5) * 2;
+            realTimeData.bitumenLevel += (Math.random() - 0.5) * 1;
+            
+            // Keep within bounds
+            realTimeData.dryerTemp = Math.max(175, Math.min(195, realTimeData.dryerTemp));
+            realTimeData.mixerTemp = Math.max(160, Math.min(175, realTimeData.mixerTemp));
+            realTimeData.gasPresssure = Math.max(6.5, Math.min(8.5, realTimeData.gasPresssure));
+            realTimeData.production = Math.max(85, Math.min(110, realTimeData.production));
+            realTimeData.bitumenLevel = Math.max(20, Math.min(95, realTimeData.bitumenLevel));
+            
+            // Update UI
+            document.getElementById('dryerTemp').textContent = realTimeData.dryerTemp.toFixed(1) + '°C';
+            document.getElementById('mixerTemp').textContent = realTimeData.mixerTemp.toFixed(1) + '°C';
+            document.getElementById('gasPress').textContent = realTimeData.gasPresssure.toFixed(1) + ' bar';
+            document.getElementById('production').textContent = realTimeData.production.toFixed(1) + ' t/h';
+            document.getElementById('bitumenLevel').textContent = realTimeData.bitumenLevel.toFixed(0) + '%';
+            
+            // Update monitor tab
+            if (document.getElementById('monitor-dryer-temp')) {
+                document.getElementById('monitor-dryer-temp').textContent = realTimeData.dryerTemp.toFixed(1) + '°C';
+                document.getElementById('monitor-mixer-temp').textContent = realTimeData.mixerTemp.toFixed(1) + '°C';
+                document.getElementById('monitor-gas-pressure').textContent = realTimeData.gasPresssure.toFixed(1) + ' bar';
+                document.getElementById('monitor-production').textContent = realTimeData.production.toFixed(1) + ' t/h';
+            }
+            
+            // Add trend data
+            const now = new Date();
+            trendData.push({
+                time: now.getTime(),
+                dryerTemp: realTimeData.dryerTemp,
+                mixerTemp: realTimeData.mixerTemp,
+                gasPresssure: realTimeData.gasPresssure,
+                production: realTimeData.production
+            });
+            
+            // Keep only last 50 data points
+            if (trendData.length > 50) {
+                trendData.shift();
+            }
+            
+            checkAlerts();
+        }
+
+        function checkAlerts() {
+            const alertsContainer = document.getElementById('alerts-container');
+            if (!alertsContainer) return;
+            
+            let alerts = [];
+            
+            if (realTimeData.gasPresssure < 7.0) {
+                alerts.push({
+                    type: 'warning',
+                    message: `⚠️ Figyelmeztetés: Gáznyomás alacsony (${realTimeData.gasPresssure.toFixed(1)} bar)`
+                });
+            }
+            
+            if (realTimeData.dryerTemp > 190) {
+                alerts.push({
+                    type: 'error',
+                    message: `🚨 Hiba: Szárító túlmelegedés (${realTimeData.dryerTemp.toFixed(1)}°C)`
+                });
+            }
+            
+            if (realTimeData.production < 90) {
+                alerts.push({
+                    type: 'warning',
+                    message: `⚠️ Figyelmeztetés: Alacsony termelés (${realTimeData.production.toFixed(1)} t/h)`
+                });
+            }
+            
+            if (alerts.length === 0) {
+                alerts.push({
+                    type: 'success',
+                    message: '✅ Rendben: Minden paraméter optimális tartományban'
+                });
+            }
+            
+            alertsContainer.innerHTML = alerts.map(alert => {
+                const bgColor = {
+                    'warning': '#fff3cd',
+                    'error': '#f8d7da',
+                    'success': '#d4edda'
+                }[alert.type];
+                
+                const borderColor = {
+                    'warning': '#ffc107',
+                    'error': '#dc3545',
+                    'success': '#28a745'
+                }[alert.type];
+                
+                return `<div style="padding: 10px; background: ${bgColor}; border-left: 4px solid ${borderColor}; margin-bottom: 10px; border-radius: 4px;">
+                    <strong>${alert.message}</strong>
+                </div>`;
+            }).join('');
+        }
+
+        // Trend chart initialization
+        function initTrendChart() {
+            chartCanvas = document.getElementById('trendChart');
+            if (chartCanvas) {
+                chartCtx = chartCanvas.getContext('2d');
+                setInterval(updateTrendChart, 5000);
+            }
+        }
+
+        function updateTrendChart() {
+            if (!chartCtx || trendData.length === 0) return;
+            
+            const width = chartCanvas.width;
+            const height = chartCanvas.height;
+            
+            // Clear
+            chartCtx.clearRect(0, 0, width, height);
+            
+            // Background
+            chartCtx.fillStyle = '#f8f9fa';
+            chartCtx.fillRect(0, 0, width, height);
+            
+            // Grid
+            chartCtx.strokeStyle = '#dee2e6';
+            chartCtx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const y = (height / 10) * i;
+                chartCtx.beginPath();
+                chartCtx.moveTo(0, y);
+                chartCtx.lineTo(width, y);
+                chartCtx.stroke();
+            }
+            
+            if (trendData.length < 2) return;
+            
+            // Temperature lines
+            drawTrendLine(trendData, 'dryerTemp', '#e74c3c', 150, 200);
+            drawTrendLine(trendData, 'mixerTemp', '#3498db', 150, 200);
+            
+            // Legend
+            chartCtx.font = '12px Arial';
+            chartCtx.fillStyle = '#e74c3c';
+            chartCtx.fillText('Szárító hőmérséklet', 10, 20);
+            chartCtx.fillStyle = '#3498db';
+            chartCtx.fillText('Keverő hőmérséklet', 10, 35);
+        }
+
+        function drawTrendLine(data, property, color, min, max) {
+            chartCtx.strokeStyle = color;
+            chartCtx.lineWidth = 2;
+            chartCtx.beginPath();
+            
+            for (let i = 0; i < data.length; i++) {
+                const x = (i / (data.length - 1)) * chartCanvas.width;
+                const normalizedValue = (data[i][property] - min) / (max - min);
+                const y = chartCanvas.height - (normalizedValue * chartCanvas.height);
+                
+                if (i === 0) {
+                    chartCtx.moveTo(x, y);
+                } else {
+                    chartCtx.lineTo(x, y);
+                }
+            }
+            
+            chartCtx.stroke();
+        }
+
+        // Control functions
+        function startSystem() {
+            showNotification('🟢 Rendszer elindítva', 'success');
+        }
+
+        function stopSystem() {
+            showNotification('🔴 Rendszer leállítva', 'warning');
+        }
+
+        function emergencyStop() {
+            showNotification('🚨 VÉSZLEÁLLÍTÁS AKTIVÁLVA', 'error');
+        }
+
+        function adjustParameter(device, change) {
+            if (device === 'dryer') {
+                realTimeData.dryerTemp += change;
+                showNotification(`🔥 Szárító hőmérséklet: ${realTimeData.dryerTemp.toFixed(1)}°C`, 'success');
+            } else if (device === 'mixer') {
+                realTimeData.mixerTemp += change;
+                showNotification(`🥄 Keverő hőmérséklet: ${realTimeData.mixerTemp.toFixed(1)}°C`, 'success');
+            }
+        }
+
+        function updateProduction(value) {
+            realTimeData.production = parseFloat(value);
+            showNotification(`⚡ Termelési sebesség: ${value} t/h`, 'success');
+        }
+
+        // Panel toggle
+        function togglePanel() {
+            const panel = document.getElementById('realTimePanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notification-content');
+            
+            content.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Component animations
+        function animateComponents() {
+            const components = document.querySelectorAll('.component');
+            components.forEach((comp, index) => {
+                comp.style.opacity = '0';
+                comp.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    comp.style.transition = 'all 0.5s ease';
+                    comp.style.opacity = '1';
+                    comp.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        // Process animation
+        function animateProcessSteps() {
+            const steps = document.querySelectorAll('.process-step');
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.style.animation = 'pulse 0.6s ease-in-out';
+                }, index * 200);
+            });
+        }
+    </script>
+</body>
+</html>
